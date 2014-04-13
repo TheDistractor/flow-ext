@@ -11,6 +11,7 @@ import (
 	serialex "github.com/TheDistractor/flow-ext/gadgets/jeebus/serial/extended"
 )
 
+//Automatically override the standard SerialPort from core with Extended version from this package
 func init() {
 	flow.Registry["SerialPort"] = func() flow.Circuitry { return new(serialex.SerialPort) }
 }

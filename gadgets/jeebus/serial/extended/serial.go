@@ -2,7 +2,7 @@
 
 // Interface to serial port devices (only Linux and Mac OSX).
 // SerialPortEx is an extended SerialPort with access to port params
-// It is NOT auto instanciated to the flow Registry from this package, use serial/serialex to autoadd to Registry
+// It is NOT auto instantiated to the flow Registry from this package, use serial/serialex to autoadd to Registry
 package serial
 
 import (

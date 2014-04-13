@@ -1,10 +1,11 @@
-// This package implements a stub that can replace the inbuilt Jeebus MQTTServer to allow a remote (out of process)
-// MQTT Broker like RabbitMQ or Mosquitto to be used. This Gadget does NOT implement this remote broker, rather
-// it checks for the remote host/port is listening and passes its input (Port) parameter through and steps out the way.
-// This can be useful if you want features that are not within the inbuilt MQTT Server, or you have additional external
-// processes that want to share the MQTT broker that your jeebus app is using.
+//Package extmqtt implements a stub that can replace the inbuilt Jeebus MQTTServer to allow a remote (out of process)
+//MQTT Broker like RabbitMQ or Mosquitto to be used. This Gadget does NOT implement this remote broker, rather
+//it checks for the remote host/port is listening and passes its input (Port) parameter through and steps out the way.
 //
-// Usage: (just add to your imports in main.go)
+//This can be useful if you want features that are not within the inbuilt MQTT Server, or you have additional external
+//processes that want to share the MQTT broker that your jeebus app is using.
+//
+//Usage: (just add to your imports in main.go) - it will override the default core MQTTServer.
 //
 // 	_ "github.com/TheDistractor/flow-ext/gadgets/network/extmqtt"  //override the default server
 package extmqtt
@@ -17,6 +18,7 @@ import (
 	_ "github.com/jcw/jeebus/gadgets/network"
 )
 
+//Automatically override the core MQTTServer
 func init() {
 	if glog.V(2) {
 		glog.Infoln("Remote Broker is attempting overriding inbuild MQTT...")
@@ -24,9 +26,9 @@ func init() {
 	flow.Registry["MQTTServer"] = func() flow.Circuitry { return &RemoteMQTTServer{} }
 }
 
-// Our MQTTServer is really just a gated check for a remote MQTT Broker.
-// because we pull in the original jeebus package, we make sure its init() runs before this one
-// this then allows us to overwrite the MQTTServer before its used
+//Our MQTTServer is really just a gated check for a remote MQTT Broker.
+//because we pull in the original jeebus package, we make sure its init() runs before this one
+//this then allows us to overwrite the MQTTServer before its used
 type RemoteMQTTServer struct {
 	flow.Gadget
 	Port    flow.Input

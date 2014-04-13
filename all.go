@@ -22,8 +22,8 @@ import (
 
 	_ "github.com/TheDistractor/flow-ext/gadgets/housemon/logging"
 	_ "github.com/TheDistractor/flow-ext/gadgets/jeebus/serial/compat"
-	
-//	_ "github.com/TheDistractor/flow-ext/gadgets/housemon/statemanagement"
+
+	_ "github.com/TheDistractor/flow-ext/gadgets/housemon/statemanagement"
 
 
 )
