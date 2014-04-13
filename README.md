@@ -1,11 +1,11 @@
 #flow-ext
-========
+---------
 
 Flow based Extensions, Gadgets, Decoders etc for jcw/flow based apps.
 
 
 ##Decoders
-========
+----------
 
 ###Pressure and Temperature
 ------------------------
@@ -17,7 +17,7 @@ See [more info about the decoders](https://github.com/TheDistractor/flow-ext/blo
 
 
 ##Gadgets
-=======
+---------
 
 ###HouseMon focused
 -------------------
@@ -35,14 +35,16 @@ into a tar.gz file. More info to follow, however the package has some documentat
 This Gadget allows you to simulate a number of radioBlip nodes on specific RF Network groups.
 
 ####NodeMap (extended core Gadget)
-NodeMap replaces the core NodeMap gadget to support the Band/Frequency parameter. The allows you to use:
+NodeMap replaces the core NodeMap gadget to support the Band/Frequency parameter. This will allow you to use:
+
         { data: "RFb433g5i2,roomNode,boekenkast JC",  to: "nm.Info" }
         { data: "RFb868g5i2,roomNode,keuken",  to: "nm.Info" }
 
-Important: You must also override the Readings gadget if you want your database to process this extended information
+**Important**: You must also override the Readings gadget if you want your database to process this extended information
 correctly, and is an absolute must if you have the same group (e.g. g5) on both 868 and 433 Mhz, otherwise one bands
 data will interleave with another.
-(Note: I will be submitting a derivative of this to core shortly)
+
+( **Note**: I will be submitting a derivative of this to core shortly)
 
 ####OnOffMonitor
 OnOffMonitor allows you to manage On/Off events within the context of 'time' and 'duration'. It consumes events you
@@ -65,6 +67,8 @@ If you load the Gadget via the serial/compat package, it will just replace the s
 you use the serial/serialex package is will not replace the standard SerialPort, but rather provide a SerialPortEx
 Gadget within the Flow Registry. If you use serial/extended you will be able to access the native SerialPortEx Gadget
 but it will NOT be added to the Flow Registry as any specific Gadget - in which case registration is up to you.
+
+( **Note**: I will be submitting a derivative of this to core shortly)
 
 ###MQTTServer
 If you choose to use an external MQTT broker like RabbitMQ or Mosquitto, use this Gadget to replace the inbuilt
