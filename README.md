@@ -80,10 +80,22 @@ but it will NOT be added to the Flow Registry as any specific Gadget - in which 
 
 ( **Note**: I will be submitting a derivative of this to core shortly)
 
-###MQTTServer
+####MQTTServer
 If you choose to use an external MQTT broker like RabbitMQ or Mosquitto, use this Gadget to replace the inbuilt
 Gadget. By including this Gadget, the core MQTTServer will be replaced, with a quick check to confirm an external broker
 is visible on the chosen url/port. It then steps out of the way allowing your app to talk to the external broker.
+
+####ReadlineStdIn
+Sometimes you may want to pipe data into Jeebus/Housemon from the commandline. Perhaps you have a python script that
+outputs data to its stdout. Use this Gadget to capture line orientated input to your apps stdin.
+To use, simply include this line in your imports
+
+```go
+	_ "github.com/TheDistractor/flow-ext/gadgets/jeebus/io/readline"  //ReadlineStdIn
+```
+
+You now have a ReadlineStdIn Gadget whos' **.Out** pin represents the line orientated data read from stdin. You you can
+hook this pin up to an Input pin of another gadget.
 
 
 
