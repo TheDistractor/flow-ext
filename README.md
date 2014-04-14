@@ -46,6 +46,16 @@ data will interleave with another.
 
 ( **Note**: I will be submitting a derivative of this to core shortly)
 
+####PutReadings (extended core Gadget)
+PutReadings replaces the core PutReadings gadget to support the Band/Frequency parameter. This will allow you to use:
+
+        { data: "RFb433g5i2,roomNode,boekenkast JC",  to: "nm.Info" }
+        { data: "RFb868g5i2,roomNode,keuken",  to: "nm.Info" }
+**Important**: You will need the revised NodeMap (see above).
+
+**Note**:I have also published [convert-rf-readings](https://github.com/TheDistractor/convert-rf-readings) which allows
+you to convert between the two formats. convert-rf-readings has basic documentation.
+
 ####OnOffMonitor
 OnOffMonitor allows you to manage On/Off events within the context of 'time' and 'duration'. It consumes events you
 specify from DataSub and generates one or more additional 'related' events. As an example, you can listen for roomNode
