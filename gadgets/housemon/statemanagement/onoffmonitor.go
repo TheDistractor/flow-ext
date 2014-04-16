@@ -75,16 +75,6 @@ func init() {
 //create a new instance of OnOffMonitor with appropriate construction
 func NewOnOffMonitor() *OnOffMonitor {
 	o := &OnOffMonitor{}
-	o.Watched = make(map[string]*OnOffState)
-
-	o.baseName = "by/ll/oomon/"
-	o.birth = UnixMs(time.Now()) //ms
-
-	//pass these down to state upon construction
-	o.stateOff = float64(0)
-	o.stateOn = float64(1)
-	o.stateUnknown = float64(-1)
-
 	return o
 }
 
@@ -97,6 +87,9 @@ type OnOffMonitor struct {
 	In  flow.Input  //Inboud Flow circuit messages
 	Out flow.Output //Outbound Flow circuit messages
 
+}
+
+type OnOffMonitorInst struct {
 	Watched  map[string]*OnOffState //we manage each of these 'watches' as a separate state.
 	baseName string                 //default base namespace for output events
 	birth    int64                  //when this instance was first created (ms)
@@ -104,6 +97,23 @@ type OnOffMonitor struct {
 	stateOff     float64
 	stateOn      float64
 	stateUnknown float64
+}
+
+func NewOnOffMonitorInst() (*OnOffMonitorInst) {
+
+	o := &OnOffMonitorInst{}
+
+	o.Watched = make(map[string]*OnOffState)
+
+	o.baseName = "by/ll/oomon/"
+	o.birth = UnixMs(time.Now()) //ms
+
+	//pass these down to state upon construction
+	o.stateOff = float64(0)
+	o.stateOn = float64(1)
+	o.stateUnknown = float64(-1)
+
+	return o
 }
 
 type OnOffState struct {
@@ -132,7 +142,7 @@ const (
 )
 
 //create a new State with correct initial construction
-func (w *OnOffMonitor) NewState(createDate int64, name string) *OnOffState {
+func (w *OnOffMonitorInst) NewState(createDate int64, name string) *OnOffState {
 
 	state := &OnOffState{Name: name, On: createDate, Off: createDate, Current: w.stateUnknown, Thresholds: make(map[string]*ThresholdDuration), Remaining: []int64{}}
 
@@ -154,6 +164,9 @@ func (w *OnOffMonitor) Run() {
 	if glog.V(2) {
 		glog.Info("OnOffMonitor.Run")
 	}
+
+	wi := NewOnOffMonitorInst()
+
 
 	checkSince := time.Second * 20 //how often we emit -Since - overriden by .Param
 
@@ -204,13 +217,13 @@ func (w *OnOffMonitor) Run() {
 
 	//Does this Gadget instance invert meaning of 0 & 1
 	if invert {
-		w.stateOff = float64(1)
-		w.stateOn = float64(0)
+		wi.stateOff = float64(1)
+		wi.stateOn = float64(0)
 	}
 
 	//process .Filter inputs
 	for filter := range w.Filter {
-		_ = w.NewState(w.birth, filter.(string))
+		_ = wi.NewState(wi.birth, filter.(string))
 		//TODO:ideally we should now pull last seen data from DB, instead of Now() so we get a LKV startup
 		//but we need an appropriate stable DB API - revisit
 	}
@@ -218,10 +231,10 @@ func (w *OnOffMonitor) Run() {
 	//process .Thresholds  .Tag is <Location>, .Msg is a Duration like 2m30s
 	for threshold := range w.Threshold {
 		t := threshold.(flow.Tag)
-		_ = w.Watched[t.Tag].AddThreshold(t.Msg.(string))
+		_ = wi.Watched[t.Tag].AddThreshold(t.Msg.(string))
 	}
 	if glog.V(3) {
-		for wk, wv := range w.Watched {
+		for wk, wv := range wi.Watched {
 			glog.Info("Watched:", wk, wv.Thresholds)
 		}
 	}
@@ -241,7 +254,7 @@ func (w *OnOffMonitor) Run() {
 		case f := <-timerFor.C:
 			//check which states we can cover
 			//timerFor.Stop()
-			for sk,sv := range w.Watched {
+			for sk,sv := range wi.Watched {
 				fired , _ := sv.ExpiredThresholds(f)
 
 				for _,d := range fired {
@@ -251,20 +264,20 @@ func (w *OnOffMonitor) Run() {
 					}
 
 					w.Out.Send(flow.Tag{
-						fmt.Sprintf(MaskFor, w.baseName, sk, eventName, stateDirection), d})
+						fmt.Sprintf(MaskFor, wi.baseName, sk, eventName, stateDirection), d})
 
 				}
 
 			}
 			//we have sent matching events, now reset timer for next fire
-			next,err := w.RecalcNextFor()
+			next,err := wi.RecalcNextFor()
 			if err == nil {
 				timerFor.Reset(next.Sub(time.Now()))
 			}
 
 		case t := <-timerSince.C:
 
-			for wk, wv := range w.Watched {
+			for wk, wv := range wi.Watched {
 
 				currentState := wv.Current
 
@@ -277,13 +290,13 @@ func (w *OnOffMonitor) Run() {
 					if wv.Off <= UnixMs(t.Add(-checkSince)) {
 
 						w.Out.Send(flow.Tag{
-							fmt.Sprintf(MaskSince, w.baseName, wk, eventName, stateDirection), wv.Off})
+							fmt.Sprintf(MaskSince, wi.baseName, wk, eventName, stateDirection), wv.Off})
 					}
 				} else if currentState == wv.stateOn { //how long On
 					if wv.On <= UnixMs(t.Add(-checkSince)) {
 
 						w.Out.Send(flow.Tag{
-							fmt.Sprintf(MaskSince, w.baseName, wk, eventName, stateDirection), wv.On})
+							fmt.Sprintf(MaskSince, wi.baseName, wk, eventName, stateDirection), wv.On})
 					}
 				}
 			}
@@ -318,7 +331,7 @@ func (w *OnOffMonitor) Run() {
 				}
 
 
-				if match, ok := w.Watched[location]; ok {
+				if match, ok := wi.Watched[location]; ok {
 
 					stateChange := false
 					//change in state?
@@ -351,17 +364,17 @@ func (w *OnOffMonitor) Run() {
 
 					//send our On or Off message
 					w.Out.Send(flow.Tag{
-						fmt.Sprintf(MaskOnOff, w.baseName, location, eventName, stateDirection), when})
+						fmt.Sprintf(MaskOnOff, wi.baseName, location, eventName, stateDirection), when})
 
 
-					w.Watched[location] = match
+					wi.Watched[location] = match
 
 					//if we have a stateChange we must rebuild remainings from thresholds
 					if stateChange {
-						w.Watched[location].ResetRemaining()
+						wi.Watched[location].ResetRemaining()
 						//and because we have new timeslots we must reset the timerFor
 						_ = timerFor.Stop()
-						next,err := w.RecalcNextFor()
+						next,err := wi.RecalcNextFor()
 						var then time.Duration
 						if err == nil {
 							then = next.Sub(time.Now())
@@ -383,7 +396,7 @@ func (w *OnOffMonitor) Run() {
 
 
 //find the closest remaining timeslot
-func (s *OnOffMonitor) RecalcNextFor() (time.Time, error) {
+func (s *OnOffMonitorInst) RecalcNextFor() (time.Time, error) {
 	min := int64(math.MaxInt64)
 
 	for _, sv := range s.Watched {
