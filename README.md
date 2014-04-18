@@ -85,6 +85,57 @@ If you choose to use an external MQTT broker like RabbitMQ or Mosquitto, use thi
 Gadget. By including this Gadget, the core MQTTServer will be replaced, with a quick check to confirm an external broker
 is visible on the chosen url/port. It then steps out of the way allowing your app to talk to the external broker.
 
+####HTTPServer
+This version of HTTPServer supports HTTP(S):// and WS(S)://. It can be loaded to override the existing HTTPServer
+implementation within the core packages, simply import as:
+
+```go
+	_ "github.com/TheDistractor/flow-ext/gadgets/network/http"  //HTTPServer with https and ws-protocol selection
+```
+
+An additional "Feed" input of 'Param' is supplied where you can include the
+following parameters as flow.Tag{} entries:
+
+'certfile'
+
+'certkey'
+
+```json
+
+   feeds: [
+     { tag:"certfile", data: "/path/to/cert.pem", to: "http.Param" }
+     { tag:"certkey", data: "/path/to/cert.key", to: "http.Param" }
+     #...more feeds
+   ]
+
+```
+
+If you want to use this in Housemon, its HTTPServer is defined in main.go (and overrides the one in json circuit) so you
+should add the appropriate parameters there:
+
+```go
+main.go:
+
+	c.Feed("http.Param", flow.Tag{"certfile", "/path/to/cert.pem"})
+	c.Feed("http.Param", flow.Tag{"certkey", "/path/to/cert.key"})
+```
+
+*Note*: When you add a valid certificate/key your server will switch to HTTPS:// and your websocket support will also
+switch to WSS:// using whatever PORT you defined.
+(Your browser/client may warn you if your server certificate is untrusted, you should use the appropriate commands
+for your os/client to enable this trust)
+
+**Important**: This revised gadget has been submitted to the core jeebus/housemon repo's , until its features are incorporated
+you should also check and add the following line to 'jeebus.coffee' within jeebus to enable wss:// support.
+[see here, jeebus.coffee lines 49:50](https://github.com/TheDistractor/jeebus/commit/7cd3c80eb2fe158ae597c4daa02203ef3471f28e#diff-f4e44c99773d98dee8fb4e934fad59e5R5)
+
+```go
+-      ws = new WebSocket "ws://#{location.host}/ws", [appTag]
+ +      wsProto = (if "https:" is document.location.protocol then "wss://" else "ws://")
+ +      ws = new WebSocket "#{wsProto}#{location.host}/ws", [appTag]
+```
+
+
 ####ReadlineStdIn
 Sometimes you may want to pipe data into Jeebus/Housemon from the commandline. Perhaps you have a python script that
 outputs data to its stdout. Use this Gadget to capture line orientated input to your apps stdin.
