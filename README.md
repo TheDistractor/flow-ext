@@ -4,6 +4,10 @@
 Flow based Extensions, Gadgets, Decoders etc for jcw/flow based apps.
 
 
+**Update 2014/04/23:** Added RangeMap Gadget.
+**Update 2014/04/21:** Updated SerialPortEx Gadget.
+
+
 ##Decoders
 ----------
 
@@ -18,6 +22,56 @@ See [more info about the decoders](https://github.com/TheDistractor/flow-ext/blo
 
 ##Gadgets
 ---------
+
+###Generic
+----------
+
+####ReadlineStdIn
+Sometimes you may want to pipe data into Jeebus/Housemon from the commandline. Perhaps you have a python script that
+outputs data to its stdout. Use this Gadget to capture line orientated input to your apps stdin.
+To use, simply include this line in your imports
+
+```go
+	_ "github.com/TheDistractor/flow-ext/gadgets/jeebus/io/readline"  //ReadlineStdIn
+```
+
+You now have a ReadlineStdIn Gadget whos' **.Out** pin represents the line orientated data read from stdin. You you can
+hook this pin up to an Input pin of another gadget.
+
+
+####RangeMap
+It is often a requirement to map a value from one range constraint to another, for instance mapping a 10bit ADC (0-1023)
+to an 8bit PWM (0-255). The RangeMap Gadget helps you achieve just that. My main use for this is to actually map
+a 8bit (light intensity) LDR value from roomnode's to an on/off (0/1).
+
+Usage:
+
+Provide the input range values as flow.Tag's such as:
+
+```json
+    { tag: "fromlow", data: 0, to: "map.Param" }
+    { tag: "fromhi", data: 255, to: "map.Param" }
+    { tag: "tolow", data: 0, to: "map.Param" }
+    { tag: "tohi", data: 1023, to: "map.Param" }
+```
+(This example will map a typical PWM value back to an 10bit ADC range).
+
+Then wire up the **.In** and **.Out** pins within your circuit.
+The **.In** pin could be the value from a sensor feed (via the MQTTSub Gadget).
+The **.Out** pin could be to the **.To** pin of a Serial Gadget connected to an arduino/jeenode controlling another device.
+
+If your arduino was driving a relay, you could use the light intensity to switch it on/off using something like:
+
+```json
+    { tag: "fromlow", data: 255, to: "map.Param" }
+    { tag: "fromhi", data: 0, to: "map.Param" }
+    { tag: "tolow", data: 0, to: "map.Param" }
+    { tag: "tohi", data: 1, to: "map.Param" }
+```
+i.e If the light intensity is more than 50% (128) the output would be 1 and less that 50%, it would be 0. You could
+reverse the login by switching the 'fromlow' and 'fromhi' values.
+
+
 
 ###HouseMon focused
 -------------------
@@ -154,17 +208,6 @@ you should also check and add the following line to 'jeebus.coffee' within jeebu
 ```
 
 
-####ReadlineStdIn
-Sometimes you may want to pipe data into Jeebus/Housemon from the commandline. Perhaps you have a python script that
-outputs data to its stdout. Use this Gadget to capture line orientated input to your apps stdin.
-To use, simply include this line in your imports
-
-```go
-	_ "github.com/TheDistractor/flow-ext/gadgets/jeebus/io/readline"  //ReadlineStdIn
-```
-
-You now have a ReadlineStdIn Gadget whos' **.Out** pin represents the line orientated data read from stdin. You you can
-hook this pin up to an Input pin of another gadget.
 
 
 
