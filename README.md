@@ -4,8 +4,8 @@
 Flow based Extensions, Gadgets, Decoders etc for jcw/flow based apps.
 
 
-**Update 2014/04/23:** Added RangeMap Gadget.
-**Update 2014/04/21:** Updated SerialPortEx Gadget.
+* **Update 2014/04/23:** Added RangeMap Gadget.
+* **Update 2014/04/21:** Updated SerialPortEx Gadget.
 
 
 ##Decoders
@@ -46,6 +46,12 @@ a 8bit (light intensity) LDR value from roomnode's to an on/off (0/1).
 
 Usage:
 
+Add to imports:
+
+```
+	_ "github.com/TheDistractor/flow-ext/gadgets/generic/conversions/rangemap"  //RangeMapper
+```
+
 Provide the input range values as flow.Tag's such as:
 
 ```json
@@ -71,6 +77,30 @@ If your arduino was driving a relay, you could use the light intensity to switch
 i.e If the light intensity is more than 50% (128) the output would be 1 and less that 50%, it would be 0. You could
 reverse the login by switching the 'fromlow' and 'fromhi' values.
 
+
+
+###Flow focused
+---------------
+
+####DeadOutPin
+
+This utility Gadget can be used within a circuit to sit on an input PIN of another Gadget that would normally expect
+Input flows, but in cases where your circuit does not want to supply any. This will stop your Gadget from spinning
+on nil input values. I would expect this Gadget to be un-necessary in future revisions of 'flow', but for now it can
+help Gadget development in specific cases. I use it in gadgets that can have multiple inputs, that in some circuits only
+'some' of the inputs are connected.
+
+Add to imports:
+
+```
+	_ "github.com/TheDistractor/flow-ext/gadgets/flow/deadoutpin"  //DeadOutPin
+```
+
+Incorporate into a circuit:
+
+```json
+    { from: "<DeadOutPin>.Out", to:"<TargetGadget>.To"} #stop it complaining
+```
 
 
 ###HouseMon focused
