@@ -68,15 +68,33 @@ You can then hook into this event with another appropriate Gadget to handle the 
 
 ####SerialPort (extended core Gadget)
 The SerialPortEx Gadget is an extended SerialPort. It contains a .Param pin to allow configuration of such things
-as Baud, Databits & StopBits. It otherwise operate directly as per the standard SerialPort gadget and is directly
+as Baud, Databits & StopBits. It otherwise operates directly as per the standard SerialPort gadget and is directly
 interchangeable. Its default configuration is as per the core SerialPort Gadget.
 This Gadget is appropriate if you wish more control over the serial port, such as if you are using an ATTINY based micro
 like the JNu,ATTiny85,ATTiny84 or a GPS or bluetooth module.
-There are actually two 'variants' of this Gadget. They both do the "same" thing, but are implemented in different ways
-If you load the Gadget via the serial/compat package, it will just replace the standard SerialPort implementation. If
-you use the serial/serialex package is will not replace the standard SerialPort, but rather provide a SerialPortEx
-Gadget within the Flow Registry. If you use serial/extended you will be able to access the native SerialPortEx Gadget
-but it will NOT be added to the Flow Registry as any specific Gadget - in which case registration is up to you.
+
+There are actually two 'variants' of this Gadget. They both do the "same" thing, but are implemented in different ways:
+
+* If you load the Gadget via the serial/compat package, it will just replace the standard SerialPort implementation.
+* If you use the serial/serialex package it will not replace the standard SerialPort, but rather provide a SerialPortEx
+Gadget within the Flow Registry.
+* If you use serial/extended you will be able to access the native SerialPortEx Gadget, but it will NOT be added to the
+Flow Registry as a Gadget - in which case registration is up to you to add it to the Registry/Circuit yourself.
+
+**Update 2014/04/20** - The .Param pin now specifically supports an 'init' parameter, that you can use to send *initial*
+data to the serial port in a one off manner (perhaps used to set things up)
+
+```json
+    { tag:"init", data: "v", to: "sp.Param" }
+```
+
+The 'init' parameter also supports the concept of a delay (in ms), that can be used to separate time sensitive init sequences:
+
+```json
+    { tag:"init", data: {delay:20}, to: "sp.Param" }
+```
+
+These 'init' sequences are replayed in the order they are received.
 
 ( **Note**: I will be submitting a derivative of this to core shortly)
 

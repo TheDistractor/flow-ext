@@ -8,6 +8,7 @@ package serial
 import (
 	"bufio"
 	"time"
+
 	"github.com/chimera/rs232"
 	"github.com/jcw/flow"
 )
@@ -31,6 +32,8 @@ func (w *SerialPort) Run() {
 	databits := uint8(8)
 	stopbits := uint8(1)
 
+	initdata := make([]interface{},0) //initialization data sequence (if supplied)
+
 	for param := range w.Param {
 
 		p := param.(flow.Tag)
@@ -42,6 +45,8 @@ func (w *SerialPort) Run() {
 			databits = uint8(p.Msg.(float64))
 		case "stopbits":
 			stopbits = uint8(p.Msg.(float64))
+		case "init":
+			initdata = append(initdata,p.Msg) //initialization sequence
 		}
 
 	}
@@ -61,21 +66,33 @@ func (w *SerialPort) Run() {
 		// }()
 		// time.Sleep(time.Second)
 
+
+		//handle initialization data (this loop only happens once)
+		go func() {
+			for _,data := range initdata {
+				switch data.(type) {
+					case map[string]interface{}:
+						hash := data.(map[string]interface{})
+
+						for k,v := range hash {
+							switch k {
+								case "delay":
+									if d,ok := v.(float64);ok {
+										<-time.After(time.Millisecond*time.Duration(int(d)))
+									}
+							}
+
+						}
+					default:
+						_,_ = writeHandler(dev, data)
+				}
+			}
+		}()
+
 		// separate process to copy data out to the serial port
 		go func() {
 			for m := range w.To {
-				switch v := m.(type) {
-				case string:
-					dev.Write([]byte(v + "\n"))
-				case []byte:
-					dev.Write(v)
-				case int:
-					dev.SetDTR(true) // pulse DTR to reset
-					time.Sleep(time.Duration(v) * time.Millisecond)
-					dev.SetDTR(false)
-				case bool:
-					dev.SetRTS(v)
-				}
+				_,_ = writeHandler(dev, m)
 			}
 		}()
 
@@ -87,3 +104,22 @@ func (w *SerialPort) Run() {
 	}
 }
 
+//writeHandler is a generic type converter for Serial Input (used by both .Param and .To )
+func writeHandler(dev *rs232.Port,  m interface{} ) (int,error) {
+
+	switch v := m.(type) {
+	case string:
+		return dev.Write([]byte(v + "\n"))
+	case []byte:
+		return dev.Write(v)
+	case int:
+		if err:= dev.SetDTR(true); err==nil { // pulse DTR to reset
+			time.Sleep(time.Duration(v) * time.Millisecond)
+			return 0,dev.SetDTR(false)
+		}
+	case bool:
+		return 0,dev.SetRTS(v)
+	}
+
+	return 0,nil //TODO: we lost this type - perhaps log?
+}
