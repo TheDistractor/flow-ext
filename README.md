@@ -1,4 +1,4 @@
-#flow-ext
+# flow-ext
 ---------
 
 Flow based Extensions, Gadgets, Decoders etc for jcw/flow based apps.
@@ -6,12 +6,13 @@ Flow based Extensions, Gadgets, Decoders etc for jcw/flow based apps.
 
 * **Update 2014/04/23:** Added RangeMap Gadget.
 * **Update 2014/04/21:** Updated SerialPortEx Gadget.
+* **Update 2014/04/26:** MQTTServerEx packages reorganised to make them more flexible like SerialPortEx.
 
 
-##Decoders
+## Decoders
 ----------
 
-###Pressure and Temperature
+### Pressure and Temperature
 ------------------------
 
 Bmp085 and Bmp085Batt, effectively a decoder for the [Bosch BMP085](http://www.digikey.com/uk/en/ph/bosch/bmp085.html)
@@ -20,13 +21,13 @@ and used within the [Jeelabs Pressure Plug](http://jeelabs.net/projects/hardware
 See [more info about the decoders](https://github.com/TheDistractor/flow-ext/blob/master/decoders/jeelib/bmp085.md)
 
 
-##Gadgets
+## Gadgets
 ---------
 
-###Generic
+### Generic
 ----------
 
-####ReadlineStdIn
+#### ReadlineStdIn
 Sometimes you may want to pipe data into Jeebus/Housemon from the commandline. Perhaps you have a python script that
 outputs data to its stdout. Use this Gadget to capture line orientated input to your apps stdin.
 To use, simply include this line in your imports
@@ -39,7 +40,7 @@ You now have a ReadlineStdIn Gadget whos' **.Out** pin represents the line orien
 hook this pin up to an Input pin of another gadget.
 
 
-####RangeMap
+#### RangeMap
 It is often a requirement to map a value from one range constraint to another, for instance mapping a 10bit ADC (0-1023)
 to an 8bit PWM (0-255). The RangeMap Gadget helps you achieve just that. My main use for this is to actually map
 a 8bit (light intensity) LDR value from roomnode's to an on/off (0/1).
@@ -79,10 +80,10 @@ reverse the login by switching the 'fromlow' and 'fromhi' values.
 
 
 
-###Flow focused
+### Flow focused
 ---------------
 
-####DeadOutPin
+#### DeadOutPin
 
 This utility Gadget can be used within a circuit to sit on an input PIN of another Gadget that would normally expect
 Input flows, but in cases where your circuit does not want to supply any. This will stop your Gadget from spinning
@@ -103,10 +104,10 @@ Incorporate into a circuit:
 ```
 
 
-###HouseMon focused
+### HouseMon focused
 -------------------
 
-####LogArchiverTGZ
+#### LogArchiverTGZ
 
 This Gadget takes the output from the Core Logger gadget as its input. It also takes an input mask to specify its
 actions. A typical setup is to set the output mask to monthly (tar) to add each daily log to a monthly tar file.
@@ -114,11 +115,11 @@ We then take the output of this gadget, and supply it as the input to another in
 time with a mask of monthly (gz), which will take the monthly tar file from the previous gadget instance and turn it
 into a tar.gz file. More info to follow, however the package has some documentation already.
 
-####RadioBlippers (Simulation)
+#### RadioBlippers (Simulation)
 
 This Gadget allows you to simulate a number of radioBlip nodes on specific RF Network groups.
 
-####NodeMap (extended core Gadget)
+#### NodeMap (extended core Gadget)
 NodeMap replaces the core NodeMap gadget to support the Band/Frequency parameter. This will allow you to use:
 
         { data: "RFb433g5i2,roomNode,boekenkast JC",  to: "nm.Info" }
@@ -130,7 +131,7 @@ data will interleave with another.
 
 ( **Note**: I will be submitting a derivative of this to core shortly)
 
-####PutReadings (extended core Gadget)
+#### PutReadings (extended core Gadget)
 PutReadings replaces the core PutReadings gadget to support the Band/Frequency parameter. This will allow you to use:
 
         { data: "RFb433g5i2,roomNode,boekenkast JC",  to: "nm.Info" }
@@ -140,17 +141,17 @@ PutReadings replaces the core PutReadings gadget to support the Band/Frequency p
 **Note**:I have also published [convert-rf-readings](https://github.com/TheDistractor/convert-rf-readings) which allows
 you to convert between the two formats. convert-rf-readings has basic documentation.
 
-####OnOffMonitor
+#### OnOffMonitor
 OnOffMonitor allows you to manage On/Off events within the context of 'time' and 'duration'. It consumes events you
 specify from DataSub and generates one or more additional 'related' events. As an example, you can listen for roomNode
 'moved' events and generate another event 20min in the future if the state of the endpoint has not changed.
 You can then hook into this event with another appropriate Gadget to handle the new event.
 
 
-###Jeebus focused
+### Jeebus focused
 -----------------
 
-####SerialPort (extended core Gadget)
+#### SerialPortEx (extended core Gadget)
 The SerialPortEx Gadget is an extended SerialPort. It contains a .Param pin to allow configuration of such things
 as Baud, Databits & StopBits. It otherwise operates directly as per the standard SerialPort gadget and is directly
 interchangeable. Its default configuration is as per the core SerialPort Gadget.
@@ -160,10 +161,24 @@ like the JNu,ATTiny85,ATTiny84 or a GPS or bluetooth module.
 There are actually two 'variants' of this Gadget. They both do the "same" thing, but are implemented in different ways:
 
 * If you load the Gadget via the serial/compat package, it will just replace the standard SerialPort implementation.
+
+```
+	_ "github.com/TheDistractor/flow-ext/gadgets/jeebus/serial/compat"  //override default SerialPort with SerialPortEx
+
+```
 * If you use the serial/serialex package it will not replace the standard SerialPort, but rather provide a SerialPortEx
 Gadget within the Flow Registry.
+
+```
+	_ "github.com/TheDistractor/flow-ext/gadgets/jeebus/serial/serialex"  //provide SerialPortEx
+```
+
 * If you use serial/extended you will be able to access the native SerialPortEx Gadget, but it will NOT be added to the
 Flow Registry as a Gadget - in which case registration is up to you to add it to the Registry/Circuit yourself.
+
+```
+	_ "github.com/TheDistractor/flow-ext/gadgets/jeebus/serial/extended"  //SerialPortEx but NOT added to Registry
+```
 
 **Update 2014/04/20** - The .Param pin now specifically supports an 'init' parameter, that you can use to send *initial*
 data to the serial port in a one off manner (perhaps used to set things up)
@@ -182,12 +197,30 @@ These 'init' sequences are replayed in the order they are received.
 
 ( **Note**: I will be submitting a derivative of this to core shortly)
 
-####MQTTServer
+#### MQTTServerEx
 If you choose to use an external MQTT broker like RabbitMQ or Mosquitto, use this Gadget to replace the inbuilt
-Gadget. By including this Gadget, the core MQTTServer will be replaced, with a quick check to confirm an external broker
-is visible on the chosen url/port. It then steps out of the way allowing your app to talk to the external broker.
+Gadget. it simply provides you with a quick check to confirm an external broker is visible on the chosen url/port.
+It then steps out of the way allowing your app to talk to the external broker.
 
-####HTTPServer
+This Gadget can be used in three different ways like the SerialPortEx above.
+
+* Including package as mqtt/compat  will replace the core MQTTServer with MQTTServerEx, effectively using a remote broker.
+
+```
+	_ "github.com/TheDistractor/flow-ext/gadgets/network/mqtt/compat"  //override the default server with remote broker
+```
+
+* Including package as mqtt/mqttex  will include MQTTServerEx in the Registry and will not replace MQTTServer.
+
+```
+	_ "github.com/TheDistractor/flow-ext/gadgets/network/mqtt/mqttex"  //override the default server with remote broker
+```
+
+* Lastly, including package as mqtt/extended will provide the Gadget MQTTServerEx but NOT directly add it to flow
+Registry. You must add it yourself using whatever alias you prefer.
+
+
+#### HTTPServer
 This version of HTTPServer supports HTTP(S):// and WS(S)://. It can be loaded to override the existing HTTPServer
 implementation within the core packages, simply import as:
 
